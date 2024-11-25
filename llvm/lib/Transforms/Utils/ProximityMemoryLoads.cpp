@@ -59,6 +59,7 @@ bool ProximityMemoryLoadsPass::isProximity(const uint64_t ElemSizeA, Value *PtrA
     unsigned ASB = PtrB->getType()->getPointerAddressSpace();
 
     if (ASA != ASB) return false;
+
     bool SameBaseAddr = PtrA->getValueID() == PtrB->getValueID();
 
     errs() << "Same Base Address: " << SameBaseAddr << "\n";
@@ -75,9 +76,13 @@ bool ProximityMemoryLoadsPass::isProximity(const uint64_t ElemSizeA, Value *PtrA
     uint64_t EndAddrB = StartAddrB + ElemSizeB;
 
     errs() << "EndsA: " << EndAddrA << "\nEndsB: " << EndAddrB <<"\n";
-    errs() << "Min Offset: " << ((StartAddrA > EndAddrB) ? (StartAddrA - EndAddrB) : (StartAddrB - EndAddrA)) << "\n";
 
-    return (StartAddrA > EndAddrB) ? (StartAddrA - EndAddrB) <= N : (StartAddrB - EndAddrA) <= N;
+    uint64_t OffsetAtoB = (StartAddrB > EndAddrA) ? StartAddrB - EndAddrA : 0;
+    uint64_t OffsetBtoA = (StartAddrA > EndAddrB) ? StartAddrA - EndAddrB : 0;
+    uint64_t MinOffset = std::max(OffsetAtoB, OffsetBtoA);
+
+    errs() << "Min Offset: " << MinOffset << "\n";
+    return MinOffset <= N;
 }
 
 uint64_t ProximityMemoryLoadsPass::getPtrConst(const uint64_t ElemSize, Value *Ptr, const bool SameBaseAddr) {
@@ -89,8 +94,20 @@ uint64_t ProximityMemoryLoadsPass::getPtrConst(const uint64_t ElemSize, Value *P
     if (auto *Const = dyn_cast<ConstantInt>(Ptr)) {
         errs() << "Const Detected!\n";
         return Const->getZExtValue();
-    } 
-    errs() << "None Detected! Type: " << Ptr->getType() << "\n";
+    }
+    if (auto *ConstExpr = dyn_cast<ConstantExpr>(Ptr)) {
+        if (ConstExpr->getOpcode() == Instruction::IntToPtr) {
+            errs() << "IntToPtr ConstantExpr Detected!\n"; 
+            if (auto *Const = dyn_cast<ConstantInt>(ConstExpr->getOperand(0))) {
+                errs() << "Const from IntToPtr Detected!\n"; 
+                return Const->getZExtValue();
+            }
+        }
+    }
+    errs() << "None Detected! Type: "; 
+    Ptr->getType()->dump();
+    Ptr->dump();
+    errs() << "\n";
 
     return 0; 
 }
