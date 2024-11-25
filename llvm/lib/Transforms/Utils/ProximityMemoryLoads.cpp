@@ -1,16 +1,26 @@
 #include "llvm/Transforms/Utils/ProximityMemoryLoads.h"
 #include "llvm/Analysis/LoopAccessAnalysis.h"
+#include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
-#include "llvm/IR/DataLayout.h"
+#include "llvm/Support/CommandLine.h"
 
 using namespace llvm;
+
+static llvm::cl::opt<int> MaxProximity(
+    "max-proximity", 
+    llvm::cl::desc("Set max proximity between loads."), 
+    llvm::cl::init(-1)
+); 
 
 PreservedAnalyses ProximityMemoryLoadsPass::run(Function &F,
                                                 FunctionAnalysisManager &AM) { 
     const DataLayout &DL = F.getDataLayout();
-    const uint64_t N = 12;
+    const TargetTransformInfo &TTI = AM.getResult<TargetIRAnalysis>(F);
+    const uint64_t N = (MaxProximity < 0) ? TTI.getCacheLineSize() : MaxProximity;
+    errs() << "N: " << N << "\n";
     for (BasicBlock &BB : F) {
         printProximityMemoryLoads(BB, DL, N);
     }
@@ -44,8 +54,8 @@ void ProximityMemoryLoadsPass::printProximityMemoryLoads(BasicBlock &BB,
             uint64_t InnerSize = DL.getTypeStoreSize(InnerLoad->getType());
 
             if (isProximity(OuterSize, OuterPtr, InnerSize, InnerPtr, N)) {
-                errs() << "Pair of memory loads are within proximity: " 
-                       << *OuterLoad << " and " << *InnerLoad << ".\n";
+                errs() << "Pair of memory loads are within proximity: \n" 
+                       << *OuterLoad << "\n and \n" << *InnerLoad << ".\n";
             }
             /*getPointersDiff*/
         }
@@ -67,7 +77,6 @@ bool ProximityMemoryLoadsPass::isProximity(const uint64_t ElemSizeA, Value *PtrA
     uint64_t StartAddrA = getPtrConst(ElemSizeA, PtrA, SameBaseAddr);
     uint64_t StartAddrB = getPtrConst(ElemSizeB, PtrB, SameBaseAddr);    
 
-    errs() << "N: " << N << "\n";
     errs() << "StartA: "<< StartAddrA << "\nStartB: " << StartAddrB <<"\n";
 
     if (StartAddrA == 0 || StartAddrB == 0) return false;
