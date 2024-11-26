@@ -9,10 +9,10 @@
 
 using namespace llvm;
 
-static llvm::cl::opt<int> MaxProximity(
+static cl::opt<int> MaxProximity(
     "max-proximity", 
-    llvm::cl::desc("Set max proximity between loads."), 
-    llvm::cl::init(-1)
+    cl::desc("Set max proximity between loads."), 
+    cl::init(-1)
 ); 
 
 PreservedAnalyses ProximityMemoryLoadsPass::run(Function &F,
