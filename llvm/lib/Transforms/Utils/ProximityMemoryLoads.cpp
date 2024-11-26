@@ -38,9 +38,7 @@ void ProximityMemoryLoadsPass::printProximityMemoryLoads(BasicBlock &BB,
             }
         }
     }
-    std::sort(Loads.begin(), Loads.end(), [](const auto& Lhs, const auto& Rhs) {
-        return Lhs.second < Rhs.second;
-    });
+
     for (auto OuterIt = Loads.begin(); OuterIt != Loads.end(); ++OuterIt) {
         LoadInst *OuterLoad = OuterIt->first;
         Value *OuterPtr = OuterIt->second;
@@ -56,7 +54,6 @@ void ProximityMemoryLoadsPass::printProximityMemoryLoads(BasicBlock &BB,
                 errs() << "Pair of memory loads are within proximity: \n" 
                        << *OuterLoad << "\n and \n" << *InnerLoad << ".\n";
             }
-            /*getPointersDiff*/
         }
     }
 }
