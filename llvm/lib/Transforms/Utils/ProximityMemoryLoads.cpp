@@ -20,7 +20,6 @@ PreservedAnalyses ProximityMemoryLoadsPass::run(Function &F,
     const DataLayout &DL = F.getDataLayout();
     const TargetTransformInfo &TTI = AM.getResult<TargetIRAnalysis>(F);
     const uint64_t N = (MaxProximity < 0) ? TTI.getCacheLineSize() : MaxProximity;
-    errs() << "N: " << N << "\n";
     for (BasicBlock &BB : F) {
         printProximityMemoryLoads(BB, DL, N);
     }
@@ -72,51 +71,36 @@ bool ProximityMemoryLoadsPass::isProximity(const uint64_t ElemSizeA, Value *PtrA
 
     bool SameBaseAddr = PtrA->getValueID() == PtrB->getValueID();
 
-    errs() << "Same Base Address: " << SameBaseAddr << "\n";
-
     uint64_t StartAddrA = getPtrConst(ElemSizeA, PtrA, SameBaseAddr);
     uint64_t StartAddrB = getPtrConst(ElemSizeB, PtrB, SameBaseAddr);    
-
-    errs() << "StartA: "<< StartAddrA << "\nStartB: " << StartAddrB <<"\n";
 
     if (StartAddrA == 0 || StartAddrB == 0) return false;
 
     uint64_t EndAddrA = StartAddrA + ElemSizeA;
     uint64_t EndAddrB = StartAddrB + ElemSizeB;
 
-    errs() << "EndsA: " << EndAddrA << "\nEndsB: " << EndAddrB <<"\n";
-
     uint64_t OffsetAtoB = (StartAddrB > EndAddrA) ? StartAddrB - EndAddrA : 0;
     uint64_t OffsetBtoA = (StartAddrA > EndAddrB) ? StartAddrA - EndAddrB : 0;
     uint64_t MinOffset = std::max(OffsetAtoB, OffsetBtoA);
 
-    errs() << "Min Offset: " << MinOffset << "\n";
     return MinOffset <= N;
 }
 
 uint64_t ProximityMemoryLoadsPass::getPtrConst(const uint64_t ElemSize, Value *Ptr, const bool SameBaseAddr) {
     if (auto *GEP = dyn_cast<GetElementPtrInst>(Ptr)) {
-        errs() << "GEP Detected!\n";
         return calcPtrWithOffset(ElemSize, GEP, SameBaseAddr);
     } 
 
     if (auto *Const = dyn_cast<ConstantInt>(Ptr)) {
-        errs() << "Const Detected!\n";
         return Const->getZExtValue();
     }
     if (auto *ConstExpr = dyn_cast<ConstantExpr>(Ptr)) {
         if (ConstExpr->getOpcode() == Instruction::IntToPtr) {
-            errs() << "IntToPtr ConstantExpr Detected!\n"; 
             if (auto *Const = dyn_cast<ConstantInt>(ConstExpr->getOperand(0))) {
-                errs() << "Const from IntToPtr Detected!\n"; 
                 return Const->getZExtValue();
             }
         }
     }
-    errs() << "None Detected! Type: "; 
-    Ptr->getType()->dump();
-    Ptr->dump();
-    errs() << "\n";
 
     return 0; 
 }
