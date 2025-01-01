@@ -359,6 +359,11 @@ void PassBuilder::invokeVectorizerStartEPCallbacks(FunctionPassManager &FPM,
   for (auto &C : VectorizerStartEPCallbacks)
     C(FPM, Level);
 }
+void PassBuilder::invokeVectorizerEndEPCallbacks(FunctionPassManager &FPM,
+                                                 OptimizationLevel Level) {
+  for (auto &C : VectorizerEndEPCallbacks)
+    C(FPM, Level);
+}
 void PassBuilder::invokeOptimizerEarlyEPCallbacks(ModulePassManager &MPM,
                                                   OptimizationLevel Level,
                                                   ThinOrFullLTOPhase Phase) {
@@ -1507,6 +1512,9 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
 
   invokeVectorizerStartEPCallbacks(OptimizePM, Level);
 
+  //TODO: Not sure if this is where it goes...
+  invokeVectorizerEndEPCallbacks(OptimizePM, Level);
+
   LoopPassManager LPM;
   // First rotate loops that may have been un-rotated by prior passes.
   // Disable header duplication at -Oz.
@@ -2226,6 +2234,14 @@ PassBuilder::buildO0DefaultPipeline(OptimizationLevel Level,
   if (!VectorizerStartEPCallbacks.empty()) {
     FunctionPassManager FPM;
     invokeVectorizerStartEPCallbacks(FPM, Level);
+    if (!FPM.isEmpty())
+      MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
+  }
+
+  //TODO:Not sure if this is where it goes...
+  if (!VectorizerEndEPCallbacks.empty()) {
+    FunctionPassManager FPM;
+    invokeVectorizerEndEPCallbacks(FPM, Level);
     if (!FPM.isEmpty())
       MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
   }
