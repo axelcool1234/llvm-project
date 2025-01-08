@@ -4,6 +4,7 @@
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/InstIterator.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/Support/CommandLine.h"
 
@@ -18,18 +19,17 @@ PreservedAnalyses ProximityMemoryLoadsPass::run(Function &F,
   const DataLayout &DL = F.getDataLayout();
   const TargetTransformInfo &TTI = AM.getResult<TargetIRAnalysis>(F);
   const uint64_t N = (MaxProximity < 0) ? TTI.getCacheLineSize() : MaxProximity;
-  for (BasicBlock &BB : F)
-    printProximityMemoryLoads(BB, DL, N);
+  printProximityMemoryLoads(F, DL, N);
   return PreservedAnalyses::all();
 }
 
-void ProximityMemoryLoadsPass::printProximityMemoryLoads(BasicBlock &BB,
+void ProximityMemoryLoadsPass::printProximityMemoryLoads(Function &F,
                                                          const DataLayout &DL,
                                                          const uint64_t N) {
   std::vector<LoadInst *> Loads;
-  for (Instruction &I : BB)
-    if (LoadInst *LoadI = dyn_cast<LoadInst>(&I))
-      Loads.push_back(LoadI);
+  for(inst_iterator InstIter = inst_begin(F), End = inst_end(F); InstIter != End; ++InstIter)
+    if (LoadInst *LoadI = dyn_cast<LoadInst>(&*InstIter))
+      Loads.push_back(LoadI); 
 
   for (auto OuterIt = Loads.begin(), OuterEnd = Loads.end();
        OuterIt != OuterEnd; ++OuterIt) {

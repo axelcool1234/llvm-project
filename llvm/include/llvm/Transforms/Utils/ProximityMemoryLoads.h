@@ -11,7 +11,7 @@ class ProximityMemoryLoadsPass
     : public PassInfoMixin<ProximityMemoryLoadsPass> {
 public:
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
-  void printProximityMemoryLoads(BasicBlock &BB, const DataLayout &DL,
+  void printProximityMemoryLoads(Function &F, const DataLayout &DL,
                                  const uint64_t N);
   bool isProximity(LoadInst *LoadA, LoadInst *LoadB, const DataLayout &DL,
                    const uint64_t N);
