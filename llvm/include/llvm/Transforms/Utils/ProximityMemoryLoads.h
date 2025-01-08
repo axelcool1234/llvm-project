@@ -13,12 +13,10 @@ public:
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
   void printProximityMemoryLoads(BasicBlock &BB, const DataLayout &DL,
                                  const uint64_t N);
-  bool isProximity(const uint64_t ElemSizeA, Value *PtrA,
-                   const uint64_t ElemSizeB, Value *PtrB, const uint64_t N);
-  uint64_t getPtrConst(const uint64_t ElemSize, Value *Ptr,
-                       const bool SameBaseAddr);
-  uint64_t calcPtrWithOffset(const uint64_t ElemSize, GetElementPtrInst *GEP,
-                             const bool SameBaseAddr);
+  bool isProximity(LoadInst *LoadA, LoadInst *LoadB, const DataLayout &DL,
+                   const uint64_t N);
+  uint64_t getPtrConst(Value *Ptr, const DataLayout &DL);
+  uint64_t calcPtrWithOffset(GetElementPtrInst *GEP, const DataLayout &DL);
 };
 
 } // namespace llvm
