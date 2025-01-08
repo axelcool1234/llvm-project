@@ -36,8 +36,8 @@ void ProximityMemoryLoadsPass::printProximityMemoryLoads(BasicBlock &BB,
     for (auto InnerIt = std::next(OuterIt); InnerIt != Loads.end(); ++InnerIt) {
       if (isProximity(*OuterIt, *InnerIt, DL, N))
         errs() << "Pair of memory loads are within proximity: \n"
-               << *OuterIt << "\n and \n"
-               << *InnerIt << ".\n";
+               << **OuterIt << "\n and \n"
+               << **InnerIt << ".\n";
     }
   }
 }
