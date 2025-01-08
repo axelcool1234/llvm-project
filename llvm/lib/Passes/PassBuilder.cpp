@@ -327,6 +327,7 @@
 #include "llvm/Transforms/Utils/MoveAutoInit.h"
 #include "llvm/Transforms/Utils/NameAnonGlobals.h"
 #include "llvm/Transforms/Utils/PredicateInfo.h"
+#include "llvm/Transforms/Utils/ProximityMemoryLoads.h"
 #include "llvm/Transforms/Utils/RelLookupTableConverter.h"
 #include "llvm/Transforms/Utils/StripGCRelocates.h"
 #include "llvm/Transforms/Utils/StripNonLineTableDebugInfo.h"
