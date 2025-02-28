@@ -1024,20 +1024,20 @@ def funnel_shift_overshift: GICombineRule<
 
 // Transform: fshl x, ?, y | shl x, y -> fshl x, ?, y
 def funnel_shift_or_shift_to_funnel_shift_left: GICombineRule<
-   (defs root:$root), 
-   (match (G_FSHL $out1 $x $_ $y),
-          (G_SHL $out2 $x $y),
-          (G_OR $root $out1 $out2)),
-   (apply (G_FSHL $root $x $_ $y))
+  (defs root:$root), 
+  (match (G_FSHL $out1, $x, $_, $y),
+         (G_SHL $out2, $x, $y),
+         (G_OR $root, $out1, $out2)),
+  (apply (G_FSHL $root, $x, $_, $y))
 >;
 
 // Transform: fshr ?, x, y | srl x, y -> fshr ?, x, y
 def funnel_shift_or_shift_to_funnel_shift_right: GICombineRule<
-   (defs root:$root), 
-   (match (G_FSHR $out1 $_ $x $y),
-          (G_LSHR $out2 $x $y),
-          (G_OR $root $out1 $out2)),
-   (apply (G_FSHR $root $_ $x $y))
+  (defs root:$root), 
+  (match (G_FSHR $out1, $_, $x, $y),
+         (G_LSHR $out2, $x, $y),
+         (G_OR $root, $out1, $out2)),
+  (apply (G_FSHR $root, $_, $x, $y))
 >;
 
 def rotate_out_of_range : GICombineRule<
@@ -1112,9 +1112,9 @@ def funnel_shift_combines : GICombineGroup<[funnel_shift_from_or_shift,
                                             funnel_shift_to_rotate,
                                             funnel_shift_right_zero,
                                             funnel_shift_left_zero,
-                                            funnel_shift_overshift,
-                                            funnel_shift_or_shift_to_funnel_shift_left,
-                                            funnel_shift_or_shift_to_funnel_shift_right]>;
+                                            funnel_shift_overshift]>;//,
+                                            //funnel_shift_or_shift_to_funnel_shift_left,
+                                            //funnel_shift_or_shift_to_funnel_shift_right]>;
 
 def bitfield_extract_from_sext_inreg : GICombineRule<
   (defs root:$root, build_fn_matchinfo:$info),
