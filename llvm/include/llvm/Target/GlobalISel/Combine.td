@@ -1031,13 +1031,13 @@ def funnel_shift_or_shift_to_funnel_shift_left: GICombineRule<
    (apply (G_FSHL $root $x $_ $y))
 >;
 
-// Transform: fshr x, ?, y | shr x, y -> fshr x, ?, y
+// Transform: fshr ?, x, y | shr x, y -> fshr ?, x, y
 def funnel_shift_or_shift_to_funnel_shift_right: GICombineRule<
    (defs root:$root), 
-   (match (G_FSHR $out1 $x $_ $y),
+   (match (G_FSHR $out1 $_ $x $y),
           (G_SHR $out2 $x $y),
           (G_OR $root $out1 $out2)),
-   (apply (G_FSHR $root $x $_ $y))
+   (apply (G_FSHR $root $_ $x $y))
 >;
 
 def rotate_out_of_range : GICombineRule<
